@@ -35,7 +35,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":$json.message ? $json.message : \"Merhaba\"}]} }}"
+        "jsonBody": "={{ {\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":($json.message ? $json.message : \"Merhaba\")}]} }}"
       },
       "id": "http-chat-completion",
       "name": "Chat Completion",

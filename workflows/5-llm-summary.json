@@ -54,7 +54,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"Bu metni kısa şekilde özetle: \" + $json.text}]} }}"
+        "jsonBody": "={{ {\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":(\"Bu metni kısa şekilde özetle: \" + $json.text)}]} }}"
       },
       "id": "http-llm-summary",
       "name": "Generate Summary",

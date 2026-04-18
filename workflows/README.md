@@ -1,4 +1,4 @@
-# Workflow Şablonlar
+# Workflow Şablonları
 
 1. `1-data-input.json` - Webhook ile veri girişini alır.
 2. `2-pdf-pptx-processor.json` - PDF/PPTX dosya URL bilgisini işler.
