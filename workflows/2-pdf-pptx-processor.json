@@ -1,0 +1,90 @@
+{
+  "name": "2-pdf-pptx-processor",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger-pdf-pptx",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fileUrl",
+              "name": "fileUrl",
+              "type": "string",
+              "value": "https://example.com/file.pdf"
+            },
+            {
+              "id": "fileType",
+              "name": "fileType",
+              "type": "string",
+              "value": "pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-file-metadata",
+      "name": "Set File Metadata",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.example.com/file/process",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}"
+      },
+      "id": "http-process-file",
+      "name": "Process File",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        760,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set File Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set File Metadata": {
+      "main": [
+        [
+          {
+            "node": "Process File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

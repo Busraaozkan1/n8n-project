@@ -1,0 +1,14 @@
+{
+  "projectName": "n8n-project",
+  "timezone": "Europe/Istanbul",
+  "defaultLocale": "tr",
+  "workflows": {
+    "input": "workflows/1-data-input.json",
+    "processor": "workflows/2-pdf-pptx-processor.json",
+    "vlm": "workflows/3-vlm-agent.json",
+    "ocr": "workflows/4-ocr-agent.json",
+    "summary": "workflows/5-llm-summary.json",
+    "rag": "workflows/6-rag-embedding.json",
+    "chat": "workflows/7-chat-agent.json"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "openai": "OPENAI_API_KEY",
+  "ocr": "OCR_API_KEY",
+  "vlm": "VLM_API_KEY",
+  "rag": "RAG_API_KEY",
+  "googleDrive": "GOOGLE_DRIVE_API_KEY"
+}

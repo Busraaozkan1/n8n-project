@@ -1,0 +1,7 @@
+.env
+.env.local
+config/api-keys.json
+config/credentials.json
+.n8n/
+node_modules/
+dist/
