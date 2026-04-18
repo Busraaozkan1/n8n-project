@@ -1,0 +1,92 @@
+{
+  "name": "7-chat-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat-agent",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-chat-agent",
+      "name": "Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.OPENAI_API_KEY}}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":($json.message ? $json.message : \"Merhaba\")}]} }}"
+      },
+      "id": "http-chat-completion",
+      "name": "Chat Completion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"reply\": $json.choices[0].message.content} }}"
+      },
+      "id": "respond-chat",
+      "name": "Respond Chat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        760,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Chat Webhook": {
+      "main": [
+        [
+          {
+            "node": "Chat Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Completion": {
+      "main": [
+        [
+          {
+            "node": "Respond Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
