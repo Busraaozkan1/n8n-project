@@ -22,6 +22,7 @@ const env = {
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || '',
   SUPABASE_DB_URL: process.env.SUPABASE_DB_URL || '',
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+  SUPABASE_DB_SSL_VERIFY: process.env.SUPABASE_DB_SSL_VERIFY !== 'false',
   N8N_BASE_URL: process.env.N8N_BASE_URL || '',
   N8N_WEBHOOK_DOCUMENT_UPLOAD: process.env.N8N_WEBHOOK_DOCUMENT_UPLOAD || '/webhook/document-upload',
   N8N_WEBHOOK_CHAT: process.env.N8N_WEBHOOK_CHAT || '/webhook/rag-chat',

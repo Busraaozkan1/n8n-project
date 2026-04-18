@@ -20,6 +20,32 @@ async function triggerN8nDocumentWorkflow(payload) {
   });
 }
 
+async function processChunks(chunks, documentId, concurrency = 3) {
+  for (let start = 0; start < chunks.length; start += concurrency) {
+    const batch = chunks.slice(start, start + concurrency);
+    const outcomes = await Promise.allSettled(
+      batch.map(async (chunk, offset) => {
+        const index = start + offset;
+        const embedding = await createEmbedding(chunk);
+        await insertEmbedding({
+          documentId,
+          textChunk: chunk,
+          vectorLiteral: toVectorLiteral(embedding),
+          metadata: { chunk_index: index }
+        });
+        return index;
+      })
+    );
+
+    const failedOffset = outcomes.findIndex((item) => item.status === 'rejected');
+    if (failedOffset >= 0) {
+      const failed = outcomes[failedOffset];
+      const failedIndex = start + failedOffset;
+      throw new Error(`Embedding persistence failed at chunk index ${failedIndex}: ${failed.reason?.message || 'unknown error'}`);
+    }
+  }
+}
+
 async function handler(req, res) {
   if (req.method !== 'POST') {
     return sendJson(res, 405, { error: 'Method not allowed' });
@@ -52,15 +78,7 @@ async function handler(req, res) {
     });
 
     const chunks = chunkText(extractedText);
-    for (let i = 0; i < chunks.length; i += 1) {
-      const embedding = await createEmbedding(chunks[i]);
-      await insertEmbedding({
-        documentId: document.id,
-        textChunk: chunks[i],
-        vectorLiteral: toVectorLiteral(embedding),
-        metadata: { chunk_index: i }
-      });
-    }
+    await processChunks(chunks, document.id);
 
     await triggerN8nDocumentWorkflow({
       document_id: document.id,

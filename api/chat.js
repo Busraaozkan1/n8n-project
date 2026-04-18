@@ -1,9 +1,16 @@
 const { env } = require('./_config');
 const { sendJson, readJsonBody } = require('./_http');
 const { createEmbedding, toVectorLiteral } = require('../scripts/embedding-generator');
-const { semanticSearch, saveChatHistory } = require('./_db');
+const { semanticSearch, saveChatHistory, countDocuments } = require('./_db');
 
-async function generateRagResponse(query, contextRows) {
+async function generateRagResponse(query, contextRows, totalDocuments) {
+  if (!contextRows.length) {
+    if (!totalDocuments) {
+      return 'No documents are indexed yet. Upload PDF/PPTX files first, then ask your question again.';
+    }
+    return 'I could not find relevant context in the indexed documents for this question.';
+  }
+
   const context = contextRows
     .map((row, index) => `#${index + 1} (${row.filename})\n${row.text_chunk}`)
     .join('\n\n');
@@ -19,7 +26,7 @@ async function generateRagResponse(query, contextRows) {
       messages: [
         {
           role: 'system',
-          content: 'You answer based only on the provided context. If context is insufficient, say so clearly.'
+          content: 'You answer only from provided context. If context is missing or insufficient, explicitly say you do not have enough indexed information.'
         },
         {
           role: 'user',
@@ -62,7 +69,8 @@ async function handler(req, res) {
 
     const queryEmbedding = await createEmbedding(query);
     const results = await semanticSearch(toVectorLiteral(queryEmbedding), 5);
-    const responseText = await generateRagResponse(query, results);
+    const totalDocuments = await countDocuments();
+    const responseText = await generateRagResponse(query, results, totalDocuments);
 
     const history = await saveChatHistory({ userId, queryText: query, responseText });
     await triggerN8nChatWorkflow({ user_id: userId, query, response: responseText, context_hits: results.length });

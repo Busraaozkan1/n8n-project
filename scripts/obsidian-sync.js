@@ -9,6 +9,13 @@ function toSafeFileName(name) {
     .trim();
 }
 
+function escapeYamlString(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\r?\n/g, ' ');
+}
+
 async function saveMarkdownToVault(fileName, markdownContent) {
   const safeName = `${toSafeFileName(fileName).replace(/\.[^.]+$/, '')}.md`;
   const targetPath = path.join(env.OBSIDIAN_VAULT_PATH, safeName);
@@ -18,11 +25,14 @@ async function saveMarkdownToVault(fileName, markdownContent) {
 }
 
 async function syncDocumentToObsidian({ title, content, metadata = {} }) {
+  const escapedTitle = escapeYamlString(title || '');
+  const escapedSource = escapeYamlString(metadata.source || 'n8n-rag');
+
   const frontmatter = [
     '---',
-    `title: "${String(title || '').replace(/"/g, '\\"')}"`,
+    `title: "${escapedTitle}"`,
     `synced_at: "${new Date().toISOString()}"`,
-    `source: "${String(metadata.source || 'n8n-rag')}"`,
+    `source: "${escapedSource}"`,
     '---',
     ''
   ].join('\n');

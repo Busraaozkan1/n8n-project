@@ -38,7 +38,7 @@ async function createEmbedding(text) {
 }
 
 function toVectorLiteral(arr) {
-  return `[${arr.map((v) => Number(v).toFixed(10)).join(',')}]`;
+  return `[${arr.map((v) => Number(v).toFixed(8)).join(',')}]`;
 }
 
 async function semanticSearchByQuery(queryText, searchFn, limit = 5) {

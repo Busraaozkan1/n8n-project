@@ -3,7 +3,7 @@ const { env } = require('./_config');
 
 const pool = new Pool({
   connectionString: env.SUPABASE_DB_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: env.SUPABASE_DB_SSL_VERIFY }
 });
 
 async function query(text, params = []) {
@@ -68,6 +68,11 @@ async function listDocuments() {
   return result.rows;
 }
 
+async function countDocuments() {
+  const result = await query('select count(*)::int as count from documents');
+  return result.rows[0]?.count || 0;
+}
+
 module.exports = {
   query,
   insertDocument,
@@ -75,5 +80,6 @@ module.exports = {
   semanticSearch,
   saveChatHistory,
   listDocuments,
+  countDocuments,
   pool
 };
