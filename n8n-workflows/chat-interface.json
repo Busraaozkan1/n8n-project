@@ -1,0 +1,49 @@
+{
+  "name": "Chat Interface Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "chat-interface",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "Webhook_Chat",
+      "name": "Chat Interface Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const user = $input.first().json.user_id || 'anonymous';\nconst query = $input.first().json.query || '';\nreturn [{ json: { user_id: user, query, route: '/api/chat' } }];"
+      },
+      "id": "Code_Chat",
+      "name": "Route Query to API",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "Respond_Chat",
+      "name": "Respond Chat Interface",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [780, 300]
+    }
+  ],
+  "connections": {
+    "Chat Interface Webhook": {
+      "main": [[{ "node": "Route Query to API", "type": "main", "index": 0 }]]
+    },
+    "Route Query to API": {
+      "main": [[{ "node": "Respond Chat Interface", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

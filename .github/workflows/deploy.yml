@@ -1,0 +1,36 @@
+name: Deploy n8n Workflows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'n8n-workflows/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        run: |
+          test -n "${{ secrets.N8N_BASE_URL }}"
+          test -n "${{ secrets.N8N_API_KEY }}"
+
+      - name: Deploy workflow definitions to n8n
+        env:
+          N8N_BASE_URL: ${{ secrets.N8N_BASE_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          for wf in n8n-workflows/*.json; do
+            echo "Deploying $wf"
+            curl -sS -X POST "$N8N_BASE_URL/api/v1/workflows" \
+              -H "X-N8N-API-KEY: $N8N_API_KEY" \
+              -H "Content-Type: application/json" \
+              --data-binary "@$wf" >/dev/null
+          done
