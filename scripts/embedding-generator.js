@@ -41,8 +41,18 @@ function toVectorLiteral(arr) {
   return `[${arr.map((v) => Number(v).toFixed(10)).join(',')}]`;
 }
 
+async function semanticSearchByQuery(queryText, searchFn, limit = 5) {
+  if (typeof searchFn !== 'function') {
+    throw new Error('semanticSearchByQuery requires a search function');
+  }
+
+  const embedding = await createEmbedding(queryText);
+  return searchFn(toVectorLiteral(embedding), limit);
+}
+
 module.exports = {
   chunkText,
   createEmbedding,
-  toVectorLiteral
+  toVectorLiteral,
+  semanticSearchByQuery
 };
