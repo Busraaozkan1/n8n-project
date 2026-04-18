@@ -1,0 +1,49 @@
+{
+  "name": "Document Upload Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "document-upload",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "Webhook_DocumentUpload",
+      "name": "Document Upload Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 280]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nreturn [{ json: { ...item, status: 'received', supported: ['pdf','pptx'] } }];"
+      },
+      "id": "Code_ValidateFile",
+      "name": "Validate File Metadata",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 280]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "Respond_Upload",
+      "name": "Respond Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [760, 280]
+    }
+  ],
+  "connections": {
+    "Document Upload Webhook": {
+      "main": [[{ "node": "Validate File Metadata", "type": "main", "index": 0 }]]
+    },
+    "Validate File Metadata": {
+      "main": [[{ "node": "Respond Upload", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

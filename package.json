@@ -1,0 +1,16 @@
+{
+  "name": "n8n-project",
+  "version": "1.0.0",
+  "description": "n8n RAG project with Obsidian, Supabase, and Google Drive integrations",
+  "main": "api/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node api/server.js",
+    "lint": "node -e \"console.log('No linter configured')\"",
+    "build": "node -e \"console.log('No build step configured')\"",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "pg": "8.16.3"
+  }
+}

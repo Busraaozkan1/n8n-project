@@ -1,0 +1,49 @@
+{
+  "name": "RAG Pipeline Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "rag-chat",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "Webhook_Rag",
+      "name": "RAG Query Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $input.first().json.query || '';\nreturn [{ json: { query: q, stage: 'semantic-search', message: 'Use Supabase vector search and OpenAI response generation in API layer.' } }];"
+      },
+      "id": "Code_Rag",
+      "name": "Prepare Semantic Search",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 260]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "Respond_Rag",
+      "name": "Respond RAG",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [780, 260]
+    }
+  ],
+  "connections": {
+    "RAG Query Webhook": {
+      "main": [[{ "node": "Prepare Semantic Search", "type": "main", "index": 0 }]]
+    },
+    "Prepare Semantic Search": {
+      "main": [[{ "node": "Respond RAG", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}

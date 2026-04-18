@@ -1,0 +1,49 @@
+{
+  "name": "Obsidian Sync Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "obsidian-sync",
+        "httpMethod": "POST",
+        "responseMode": "lastNode"
+      },
+      "id": "Webhook_Obsidian",
+      "name": "Obsidian Sync Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 260]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn [{ json: { ...input, sync: 'queued', target: 'obsidian-vault' } }];"
+      },
+      "id": "Code_Sync",
+      "name": "Prepare Vault Sync",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 260]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "Respond_Sync",
+      "name": "Respond Sync",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [760, 260]
+    }
+  ],
+  "connections": {
+    "Obsidian Sync Webhook": {
+      "main": [[{ "node": "Prepare Vault Sync", "type": "main", "index": 0 }]]
+    },
+    "Prepare Vault Sync": {
+      "main": [[{ "node": "Respond Sync", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}
