@@ -1,0 +1,131 @@
+{
+  "name": "Obsidian Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": "on",
+        "interval": [5, "minutes"]
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "qs": "q=trashed=false and mimeType contains 'document'",
+        "authentication": "oAuth2",
+        "nodeCredentialType": "googleDriveOAuth2Api"
+      },
+      "id": "list-drive-files",
+      "name": "List Drive Files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_DB_URL }}/rest/v1/documents",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        }
+      },
+      "id": "get-synced-docs",
+      "name": "Get Synced Documents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return $node['List Drive Files'].json.files.filter(file => \n  !$node['Get Synced Documents'].json.some(doc => doc.google_drive_id === file.id)\n);"
+      },
+      "id": "find-new-files",
+      "name": "Find New Files",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.OBSIDIAN_VAULT_API }}/sync",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OBSIDIAN_API_KEY }}"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"files\": {{ $node[\\\"Find New Files\\\"].json | json.stringify }},\n  \"vault_path\": \"{{ $env.OBSIDIAN_VAULT_PATH }}\"\n}"
+      },
+      "id": "sync-to-obsidian",
+      "name": "Sync to Obsidian",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "List Drive Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Drive Files": {
+      "main": [
+        [
+          {
+            "node": "Get Synced Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Synced Documents": {
+      "main": [
+        [
+          {
+            "node": "Find New Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find New Files": {
+      "main": [
+        [
+          {
+            "node": "Sync to Obsidian",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
