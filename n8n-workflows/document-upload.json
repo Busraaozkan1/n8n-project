@@ -1,0 +1,84 @@
+{
+  "name": "Document Upload",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "upload",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-upload",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+        "authentication": "oAuth2",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "bodyParametersJson": "={\n  \"name\": \"{{ $node[\\\"Webhook\\\"].json.filename }}\",\n  \"mimeType\": \"{{ $node[\\\"Webhook\\\"].json.mimeType }}\",\n  \"parents\": [\"{{ $env.GOOGLE_DRIVE_FOLDER_ID }}\"]\n}",
+        "sendBody": true,
+        "bodyContentType": "form-urlencoded"
+      },
+      "id": "google-drive-upload",
+      "name": "Upload to Google Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_DB_URL }}/rest/v1/documents",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"filename\": \"{{ $node[\\\"Webhook\\\"].json.filename }}\",\n  \"file_type\": \"{{ $node[\\\"Webhook\\\"].json.mimeType }}\",\n  \"google_drive_id\": \"{{ $node[\\\"Upload to Google Drive\\\"].json.id }}\",\n  \"status\": \"uploaded\"\n}"
+      },
+      "id": "supabase-save-doc",
+      "name": "Save Document Metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Upload to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Save Document Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
