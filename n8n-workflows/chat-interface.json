@@ -1,0 +1,155 @@
+{
+  "name": "Chat Interface",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "onReceived"
+      },
+      "id": "webhook-chat",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": \"{{ $node[\\\"Webhook\\\"].json.query }}\"\n}"
+      },
+      "id": "query-embedding",
+      "name": "Query Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_DB_URL }}/rest/v1/rpc/search_embeddings",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"query_embedding\": {{ $node[\\\"Query Embedding\\\"].json.data[0].embedding }},\n  \"match_threshold\": 0.7,\n  \"match_count\": 5\n}"
+      },
+      "id": "semantic-search",
+      "name": "Semantic Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"model\": \"gpt-4\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful assistant. Use the provided context to answer questions.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Context: {{ $node[\\\"Semantic Search\\\"].json | json.stringify }}\\n\\nQuestion: {{ $node[\\\"Webhook\\\"].json.query }}\"\n    }\n  ],\n  \"temperature\": 0.7\n}"
+      },
+      "id": "gpt-response",
+      "name": "Generate Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_DB_URL }}/rest/v1/chat_history",
+        "authentication": "genericCredentialType",
+        "genericCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "bodyParametersJson": "={\n  \"user_query\": \"{{ $node[\\\"Webhook\\\"].json.query }}\",\n  \"ai_response\": \"{{ $node[\\\"Generate Response\\\"].json.choices[0].message.content }}\",\n  \"user_id\": \"{{ $node[\\\"Webhook\\\"].json.user_id }}\"\n}"
+      },
+      "id": "save-history",
+      "name": "Save Chat History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1050, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Query Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Embedding": {
+      "main": [
+        [
+          {
+            "node": "Semantic Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Semantic Search": {
+      "main": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Response": {
+      "main": [
+        [
+          {
+            "node": "Save Chat History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
